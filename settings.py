@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 class Settings:
     db_user: str = os.getenv("DB_USER")
     db_password: str = os.getenv("DB_PASSWORD")
@@ -11,3 +11,4 @@ class Settings:
     db_encrypt: str = os.getenv("DB_ENCRYPT")
     db_trust_server_certificate: str = os.getenv("DB_TRUST_SERVER_CERTIFICATE")
     api_key: str = os.getenv("API_KEY")
+    #print("Usuario DB:", os.getenv("DB_USER"))

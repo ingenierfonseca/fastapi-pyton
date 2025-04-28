@@ -19,6 +19,10 @@ class BibleRepository(BaseRepository):
     def findBible(self, id: int):
         try:
             bible = self.db.query(Bible).where(Bible.Id == id).first()
+
+            if not bible:
+                raise HTTPException(status_code=404, detail=f"Bible with ID {id} not found")
+            
             return bible
         except NotFoundError as e:
             raise HTTPException(status_code=404, detail=e.detail)
@@ -26,6 +30,10 @@ class BibleRepository(BaseRepository):
     def getBooksByBibleId(self, id: int):
         try:
             books = self.db.query(Book).where(Book.IdBible == id).all()
+
+            if not books:
+                raise HTTPException(status_code=404, detail=f"Books with Bible with ID {id} not found")
+            
             return books
         except NotFoundError as e:
             raise HTTPException(status_code=404, detail=e.detail)
@@ -47,6 +55,10 @@ class BibleRepository(BaseRepository):
                 (Verse.Chapter == chapter) & 
                 (Verse.Verse == verse)
             ).all()
+
+            if not verse:
+                raise HTTPException(status_code=404, detail=f"Verse not found")
+            
             return verse
         except NotFoundError as e:
             raise HTTPException(status_code=404, detail=e.detail)
@@ -69,6 +81,10 @@ class BibleRepository(BaseRepository):
                 (Verse.Verse >= start) & 
                 (Verse.Verse <= end)
             ).all()
+
+            if not verse:
+                raise HTTPException(status_code=404, detail=f"Verse not found")
+            
             return verse
         except NotFoundError as e:
             raise HTTPException(status_code=404, detail=e.detail)

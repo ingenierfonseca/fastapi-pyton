@@ -11,7 +11,7 @@ from settings import Settings
 settings = Settings()
 
 DATABASE_URL = (
-    f"mssql+pyodbc://{settings.db_host}/{settings.db_name}"
+    f"mssql+pyodbc://{settings.db_user}:{settings.db_password}@{settings.db_host}/{settings.db_name}"
     f"?driver={settings.db_driver}&encrypt={settings.db_encrypt}&trustServerCertificate={settings.db_trust_server_certificate}"
 )
 

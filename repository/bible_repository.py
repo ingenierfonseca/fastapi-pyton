@@ -1,111 +1,107 @@
-from fastapi import HTTPException
+from sqlalchemy import desc
 from models.bible import Bible
 from models.book import Book
 from models.verse import Verse
 from .base_repository import BaseRepository
-
-class NotFoundError(Exception):
-    def __init__(self, detail: str):
-        self.detail = detail
+from helpers.pagination import paginate
+from helpers.not_found_error import NotFoundError
 
 class BibleRepository(BaseRepository):
     def getAllBible(self):
-        try:
-            bible = self.db.query(Bible).all()
-            return bible
-        except NotFoundError as e:
-            raise HTTPException(status_code=404, detail=e.detail)
+        bible = self.db.query(Bible).all()
+        return bible
         
     def findBible(self, id: int):
-        try:
-            bible = self.db.query(Bible).where(Bible.Id == id).first()
+        bible = self.db.query(Bible).where(Bible.Id == id).first()
 
-            if not bible:
-                raise HTTPException(status_code=404, detail=f"Bible with ID {id} not found")
+        if not bible:
+            raise NotFoundError(f"Bible with ID {id} not found")
             
-            return bible
-        except NotFoundError as e:
-            raise HTTPException(status_code=404, detail=e.detail)
+        return bible
         
     def getBooksByBibleId(self, id: int):
-        try:
-            books = self.db.query(Book).where(Book.IdBible == id).all()
+        books = self.db.query(Book).where(Book.IdBible == id).all()
 
-            if not books:
-                raise HTTPException(status_code=404, detail=f"Books with Bible with ID {id} not found")
+        if not books:
+            raise NotFoundError(f"Books with Bible with ID {id} not found")
             
-            return books
-        except NotFoundError as e:
-            raise HTTPException(status_code=404, detail=e.detail)
+        return books
+        
+    def getVersesByBible(self, page: int, limit: int, id: int):
+        query = (
+            self.db.query(Verse)
+            .join(Book, Verse.IdBook == Book.Id)
+            .where(Book.IdBible == id)
+            .order_by(desc(Verse.Chapter))
+        )
+        total_items = query.count()
+
+        if total_items == 0:
+            raise NotFoundError(f"No verses found for Bible ID {id}")
+            
+        total_items, total_pages, items = paginate(query, page, limit)
+
+        return items, total_items, total_pages
         
     def getVersesByBookChapterAndVerse(self, id: int, name: str, chapter: int, verse: int):
-        try:
-            bible = self.db.query(Bible).where(Bible.Id == id).first()
+        bible = self.db.query(Bible).where(Bible.Id == id).first()
 
-            if not bible:
-                raise HTTPException(status_code=404, detail=f"Bible with ID {id} not found")
+        if not bible:
+            raise NotFoundError(f"Bible with ID {id} not found")
             
-            b = self.db.query(Book).where(Book.Name == name).first()
+        b = self.db.query(Book).where(Book.Name == name).first()
 
-            if not b:
-                raise HTTPException(status_code=404, detail=f"Book with Name {name} not found")
+        if not b:
+            raise NotFoundError(f"Book with Name {name} not found")
             
-            verse = self.db.query(Verse).where(
-                (Verse.IdBook == b.Id) & 
-                (Verse.Chapter == chapter) & 
-                (Verse.Verse == verse)
-            ).all()
+        verse = self.db.query(Verse).where(
+            (Verse.IdBook == b.Id) & 
+            (Verse.Chapter == chapter) & 
+            (Verse.Verse == verse)
+        ).all()
 
-            if not verse:
-                raise HTTPException(status_code=404, detail=f"Verse not found")
+        if not verse:
+            raise NotFoundError(f"Verse not found")
             
-            return verse
-        except NotFoundError as e:
-            raise HTTPException(status_code=404, detail=e.detail)
+        return verse
         
     def getVersesByBookChapterAndVerseRange(self, id: int, name: str, chapter: int, start: int, end: int):
-        try:
-            bible = self.db.query(Bible).where(Bible.Id == id).first()
+        bible = self.db.query(Bible).where(Bible.Id == id).first()
 
-            if not bible:
-                raise HTTPException(status_code=404, detail=f"Bible with ID {id} not found")
+        if not bible:
+            raise NotFoundError(f"Bible with ID {id} not found")
             
-            b = self.db.query(Book).where(Book.Name == name).first()
+        b = self.db.query(Book).where(Book.Name == name).first()
 
-            if not b:
-                raise HTTPException(status_code=404, detail=f"Book with Name {name} not found")
+        if not b:
+            raise NotFoundError(f"Book with Name {name} not found")
             
-            verse = self.db.query(Verse).where(
-                (Verse.IdBook == b.Id) & 
-                (Verse.Chapter == chapter) & 
-                (Verse.Verse >= start) & 
-                (Verse.Verse <= end)
-            ).all()
+        verse = self.db.query(Verse).where(
+            (Verse.IdBook == b.Id) & 
+            (Verse.Chapter == chapter) & 
+            (Verse.Verse >= start) & 
+            (Verse.Verse <= end)
+        ).all()
 
-            if not verse:
-                raise HTTPException(status_code=404, detail=f"Verse not found")
+        if not verse:
+            raise NotFoundError(f"Verse not found")
             
-            return verse
-        except NotFoundError as e:
-            raise HTTPException(status_code=404, detail=e.detail)
+        return verse
     
     def searchText(self, text: str):
-        try:
-            results = [
-                {
-                    "id": id,
-                    "book": name,
-                    "chapter": chapter,
-                    "verse": verse,
-                    "content": content
-                }
-                for id, name, chapter, verse, content in self.db.query(
-                    Verse.Id, Book.Name, Verse.Chapter, Verse.Verse, Verse.Content
-                )
-                .join(Book, Verse.IdBook == Book.Id)
-                .filter(Verse.Content.contains(text))
-                .all()
-            ]
-            return results
-        except NotFoundError as e:
-            raise HTTPException(status_code=404, detail=e.detail)
+        results = [
+            {
+                "id": id,
+                "book": name,
+                "chapter": chapter,
+                "verse": verse,
+                "content": content
+            }
+            for id, name, chapter, verse, content in self.db.query(
+                Verse.Id, Book.Name, Verse.Chapter, Verse.Verse, Verse.Content
+            )
+            .join(Book, Verse.IdBook == Book.Id)
+            .filter(Verse.Content.contains(text))
+            .all()
+        ]
+        return results

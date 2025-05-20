@@ -34,6 +34,23 @@ class TopicRepository(BaseRepository):
         except NotFoundError as e:
             raise HTTPException(status_code=404, detail=e.detail)
         
+    def updateTopic(self, id: int, topicData: Topic):
+        try:
+            existing_topic = self.db.query(Topic).filter(Topic.Id == id).first()
+            if not existing_topic:
+                raise HTTPException(status_code=404, detail=f"Topic with ID {topicData.Id} not found")
+                #return None
+
+            for attr, value in topicData.__dict__.items():
+                if value is not None and attr != "_sa_instance_state":
+                    setattr(existing_topic, attr, value)
+
+            self.db.commit()
+            self.db.refresh(existing_topic)
+            return existing_topic
+        except NotFoundError as e:
+            raise HTTPException(status_code=404, detail=e.detail)
+        
     def findTopic(self, id: int):
         try:
             topic = self.db.query(Topic).where(Topic.Id == id).first()

@@ -9,3 +9,6 @@ class Verse(Base):
     Chapter = Column("Capitulo", Integer)
     Verse = Column("Versiculo", Integer)
     Content = Column("Verso", String(500))
+
+    class Config:
+        orm_mode = True 

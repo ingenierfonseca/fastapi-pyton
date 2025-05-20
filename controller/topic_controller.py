@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Depends
 from repository.topic_repository import TopicRepository
 from models.topic import Topic
-from models.topic_request import TopicRequest, TopicResponse
+from schemas.topic_schema import TopicRequest, TopicUpdateRequest, TopicResponse
 
 class TopicController:
     bibleRepository: TopicRepository
@@ -17,6 +17,11 @@ class TopicController:
     def createTopic(self, topicData: TopicRequest):
         topic = Topic(**topicData.model_dump())
         created_topic = self.topicRepository.createTopic(topic)
+        return TopicResponse.model_validate(created_topic)
+    
+    def updateTopic(self, id: int, topicData: TopicUpdateRequest):
+        topic = Topic(**topicData.model_dump())
+        created_topic = self.topicRepository.updateTopic(id, topic)
         return TopicResponse.model_validate(created_topic)
         
     def findTopic(self, id: int):

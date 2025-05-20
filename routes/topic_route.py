@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Path
 from middleware.verify_apikey import verifyApiKey
 from controller.topic_controller import TopicController
-from models.topic_request import TopicRequest, TopicResponse
+from models.topic_request import TopicRequest, TopicUpdateRequest, TopicResponse
 
 topic = APIRouter(
     prefix="/api/topic",
@@ -21,6 +21,10 @@ def getAll(controller: TopicController = Depends()):
 @topic.post("/", response_model=TopicResponse)
 def createTopic(topic: TopicRequest, controller: TopicController = Depends()):
     return controller.createTopic(topic)
+
+@topic.patch("/{id}", response_model=TopicResponse)
+def createTopic(topic: TopicUpdateRequest, id: int = ID_VALIDATION, controller: TopicController = Depends()):
+    return controller.updateTopic(id, topic)
 
 @topic.get("/{id}")
 def findTopic(id: int = ID_VALIDATION, controller: TopicController = Depends()):

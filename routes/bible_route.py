@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from middleware.verify_apikey import verifyApiKey
 from controller.bible_controller import BibleController
 
@@ -20,6 +20,15 @@ def getBibles(id: int, controller: BibleController = Depends()):
 @bible.get("/{id}/books")
 def getBooks(id: int, controller: BibleController = Depends()):
     return controller.getBooksByBibleId(id)
+
+@bible.get("/read/{id}/book-verses")
+def read_verses_books(
+    id: int,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=1000),
+    controller: BibleController = Depends()
+):
+    return controller.getVersesByBible(page, limit, id)
 
 @bible.get("/read/{id}/book/{name}/{chapter}/{verse}")
 def read_books(id: int, name: str, chapter: int, verse: str, controller: BibleController = Depends()):

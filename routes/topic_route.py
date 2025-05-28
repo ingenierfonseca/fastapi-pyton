@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Path
 from middleware.verify_apikey import verifyApiKey
 from controller.topic_controller import TopicController
-from models.topic_request import TopicRequest, TopicUpdateRequest, TopicResponse
+from schemas.topic_schema import TopicRequest, TopicUpdateRequest, TopicResponse
 
 topic = APIRouter(
     prefix="/api/topic",
